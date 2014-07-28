@@ -1,0 +1,7 @@
+Thumbs.db
+*.user
+bin/
+obj/
+*.suo
+_ReSharper*
+
