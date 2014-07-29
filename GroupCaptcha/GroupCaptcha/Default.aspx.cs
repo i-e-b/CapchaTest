@@ -1,20 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Web;
-using System.Web.Security;
-using System.Web.UI;
-using System.Web.UI.HtmlControls;
-using System.Web.UI.WebControls;
-using System.Web.UI.WebControls.WebParts;
-using System.Xml.Linq;
+﻿namespace GroupCaptcha {
+    using System;
+    using System.Web.UI;
 
-namespace GroupCaptcha {
-	public partial class _Default : System.Web.UI.Page {
+    public partial class _Default : Page {
 
-		public int rnd { get { Random rnd = new Random(); return rnd.Next(); } }
+		public int rnd { get { var random = new Random(); return random.Next(); } }
 
 		protected void Page_Load (object sender, EventArgs e) {
 

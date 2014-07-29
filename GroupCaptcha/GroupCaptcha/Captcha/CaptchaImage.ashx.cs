@@ -1,20 +1,21 @@
-﻿using System;
-using System.Collections;
-using System.Data;
-using System.Linq;
-using System.Web;
-using System.Web.Services;
-using System.Web.Services.Protocols;
-using System.Xml.Linq;
-using System.Drawing;
-using System.Collections.Generic;
+﻿namespace GroupCaptcha.Captcha {
+    using System;
+    using System.Drawing;
+    using System.Drawing.Imaging;
+    using System.Globalization;
+    using System.Web;
+    using System.Web.Services;
 
-namespace GroupCaptcha.Captcha {
-	[WebService(Namespace = "http://tempuri.org/")]
+    [WebService(Namespace = "http://tempuri.org/")]
 	[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
 	public class CaptchaImage : IHttpHandler {
+        public bool IsReusable {
+            get {
+                return false;
+            }
+        }
 
-		private struct Pair {
+        private struct Pair {
 			public int group;
 			public int index;
 		}
@@ -22,43 +23,43 @@ namespace GroupCaptcha.Captcha {
 		public void ProcessRequest (HttpContext context) {
 			context.Response.ContentType = "image/gif";
 
-			int seed = int.Parse(context.Request.QueryString.ToString());
-			Random rnd = new Random(seed);
+			var seed = int.Parse(context.Request.QueryString.ToString());
+			var rnd = new Random(seed);
 
-			Bitmap bmp = new Bitmap(256, 256);
+			var bmp = new Bitmap(256, 256);
 
-			int[] numbers = new int[9];
-			for (int i = 0; i < numbers.Length; i++) numbers[i] = rnd.Next(1,9);
+			var numbers = new int[9];
+			for (var i = 0; i < numbers.Length; i++) numbers[i] = rnd.Next(1,9);
 
-			int c_gr = 15;
-			Pair[] groups = new Pair[c_gr];
-			for (int i = 0; i < groups.Length; i++) {
+			const int c_gr = 15;
+			var groups = new Pair[c_gr];
+			for (var i = 0; i < groups.Length; i++) {
 				groups[i].group = i % 4;
 				groups[i].index = rnd.Next(0, 9);
 			}
 
-			using (Graphics g = Graphics.FromImage(bmp)) {
+			using (var g = Graphics.FromImage(bmp)) {
 
-				Font f = new Font("Arial Black", 24, GraphicsUnit.Point);
-					int hh = f.Height / 2;
+				var f = new Font("Arial Black", 24, GraphicsUnit.Point);
+					var hh = f.Height / 2;
 				g.Clear(Color.White);
 
 				// draw connections
-				foreach (Pair pr in groups) {
-					Pen pn = new Pen(cGroup(pr.group), 2.0f);
+				foreach (var pr in groups) {
+					var pn = new Pen(cGroup(pr.group), 2.0f);
 					g.DrawLine(pn, pGroup(pr.group), pNum(pr.index, pr.group));
 				}
 
 				// draw numbers
-				for (int i = 0; i < numbers.Length; i++) {
-					Point p = pNum(i);
-					g.DrawString(numbers[i].ToString(), f, Brushes.Black, p.X, p.Y-hh);
+				for (var i = 0; i < numbers.Length; i++) {
+					var p = pNum(i);
+					g.DrawString(numbers[i].ToString(CultureInfo.InvariantCulture), f, Brushes.Black, p.X, p.Y-hh);
 				}
 
 				// draw groups
-				for (int i = 0; i < 4; i++) {
+				for (var i = 0; i < 4; i++) {
 					Brush gb = new SolidBrush(cGroup(i));
-					Point p = pGroup(i);
+					var p = pGroup(i);
 					g.FillEllipse(Brushes.White, new Rectangle(p.X - hh, p.Y - hh, f.Height, f.Height));
 					g.DrawString(nGroup(i).ToUpper(), f, gb, p.X-hh, p.Y - hh);
 				}
@@ -66,11 +67,11 @@ namespace GroupCaptcha.Captcha {
 				g.Flush();
 			}
 
-			bmp.Save(context.Response.OutputStream, System.Drawing.Imaging.ImageFormat.Gif);
+			bmp.Save(context.Response.OutputStream, ImageFormat.Gif);
 			context.Response.Flush();
 		}
 
-		private string nGroup (int group) {
+		private static string nGroup (int group) {
 			switch (group) {
 				case 0: return "a";
 				case 1: return "b";
@@ -80,7 +81,7 @@ namespace GroupCaptcha.Captcha {
 			}
 		}
 
-		private Color cGroup (int group) {
+		private static Color cGroup (int group) {
 			switch (group) {
 				case 0: return Color.FromArgb(128, 0, 0);
 				case 1: return Color.FromArgb(0, 0, 150);
@@ -90,7 +91,7 @@ namespace GroupCaptcha.Captcha {
 			}
 		}
 
-		private Point pGroup (int group) {
+		private static Point pGroup (int group) {
 			switch (group) {
 				case 0: return new Point(64, 64);
 				case 1: return new Point(192, 64);
@@ -100,19 +101,13 @@ namespace GroupCaptcha.Captcha {
 			}
 		}
 
-		private Point pNum (int index) {
+		private static Point pNum (int index) {
 			return new Point((index * 28), 128);
 		}
 
-		private Point pNum (int index, int group) {
-			int off = (group < 2)?(-14):(14);
+		private static Point pNum (int index, int group) {
+			var off = (group < 2)?(-14):(14);
 			return new Point((index * 28) + 14, 128+off);
-		}
-
-		public bool IsReusable {
-			get {
-				return false;
-			}
 		}
 	}
 }
