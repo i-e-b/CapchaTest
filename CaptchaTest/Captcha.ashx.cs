@@ -1,5 +1,4 @@
 ﻿namespace CaptchaTest {
-    using System;
     using System.Collections.Generic;
     using System.Drawing;
     using System.Drawing.Drawing2D;
@@ -34,50 +33,52 @@
 		public void OutputAnimatedGif (Bitmap[] frames, HttpContext context) {
 			context.Response.ContentType = "image/gif";
 			var memoryStream = new MemoryStream();
-			var buf2 = new Byte[19];
-			var buf3 = new Byte[8];
-			buf2[0] = 33;  //extension introducer
-			buf2[1] = 255; //application extension
-			buf2[2] = 11;  //size of block
-			buf2[3] = 78;  //N
-			buf2[4] = 69;  //E
-			buf2[5] = 84;  //T
-			buf2[6] = 83;  //S
-			buf2[7] = 67;  //C
-			buf2[8] = 65;  //A
-			buf2[9] = 80;  //P
-			buf2[10] = 69; //E
-			buf2[11] = 50; //2
-			buf2[12] = 46; //.
-			buf2[13] = 48; //0
-			buf2[14] = 3;  //Size of block
-			buf2[15] = 1;  //
-			buf2[16] = 0;  //
-			buf2[17] = 0;  //
-			buf2[18] = 0;  //Block terminator
-			buf3[0] = 33;  //Extension introducer
-			buf3[1] = 249; //Graphic control extension
-			buf3[2] = 4;   //Size of block
-			buf3[3] = 9;   //Flags: reserved, disposal method, user input, transparent color
-			buf3[4] = 1;  //Delay time low byte
-			buf3[5] = 0;   //Delay time high byte
-			buf3[6] = 255; //Transparent color index
-			buf3[7] = 0;   //Block terminator
+            var applicationExtension = new byte[]{
+                 33,  //extension introducer
+                 255, //application extension
+                 11,  //size of block
+                 78,  //N
+                 69,  //E
+                 84,  //T
+                 83,  //S
+                 67,  //C
+                 65,  //A
+                 80,  //P
+                 69, //E
+                 50, //2
+                 46, //.
+                 48, //0
+                 3,  //Size of block
+                 1,  //
+                 0,  //
+                 0,  //
+                 0   //Block terminator
+            };
+            var graphicControlExtension = new byte[]{
+                 33,   //Extension introducer
+                 249,  //Graphic control extension
+                 4,    //Size of block
+                 9,    //Flags: reserved, disposal method, user input, transparent color
+                 1,    //Delay time low byte
+                 0,    //Delay time high byte
+                 255,  //Transparent color index
+                 0     //Block terminator
+            };
 			var binaryWriter = new BinaryWriter(context.Response.OutputStream);
 			var first = true;
 			foreach (var image in frames) {
 				image.Save(memoryStream, ImageFormat.Gif);
-				var buf1 = memoryStream.ToArray();
+				var gifFrame = memoryStream.ToArray();
 
 				if (first) {
 					first = false;
 					//only write these the first time....
-					binaryWriter.Write(buf1, 0, 781); //Header & global color table
-					binaryWriter.Write(buf2, 0, 19); //Application extension
+					binaryWriter.Write(gifFrame, 0, 781); //Header & global color table
+					binaryWriter.Write(applicationExtension, 0, 19); //Application extension
 				}
 
-				binaryWriter.Write(buf3, 0, 8); //Graphic extension
-				binaryWriter.Write(buf1, 789, buf1.Length - 790); //Image data
+				binaryWriter.Write(graphicControlExtension, 0, 8); //Graphic extension
+				binaryWriter.Write(gifFrame, 789, gifFrame.Length - 790); //Image data (with duplicated headers chopped out)
 
 				memoryStream.SetLength(0);
 			}
